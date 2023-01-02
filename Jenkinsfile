@@ -12,8 +12,10 @@ pipeline {
         }    
         stage('Example Build') {
             steps {
-                sh """docker image build -t one:1.0 .
-                      docker container run -d  -P one:1.0"""
+                sh """docker image build -t one:2.0 .
+                      docker image tag one:2.0 longflew/laxmitinku:2.0
+                      docker image push longflew/laxmitinku:2.0
+                      docker container run -d -P longflew/laxmitinku:2.0"""
                      
             }
         }
