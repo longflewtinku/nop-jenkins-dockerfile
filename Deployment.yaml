@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nop
+  labels:
+    app: nop
+    ver: "1.23"
+spec:
+  minReadySeconds: 5
+  replicas: 2
+  selector: 
+    matchLabels:
+      app: nop
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate: 
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: nop
+        ver: "1.23"
+    spec:
+      containers:
+        - name: nop
+          image: longflew/laxmitinku:2.0
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: nopsvc
+spec:
+  selector:
+    app: nop
+  type: LoadBalancer
+  ports:
+    - name: webprot
+      port: 35000
+      targetPort: 8080
+      protocol: TCP 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+spec:
+  minReadySeconds: 5
+  selector:
+    matchLabels: 
+      app: nop
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+  template:
+    metadata: 
+      name: nop
+      labels:
+        app: nop
+        version: "1.23"
+      spec:
+        containers: 
+           - name: postgress
+             image: postgres:15.1
+             ports:
+               - containerPort: 8080
+                 protocol: TCP
+             env:
+               - name: POSTGRES_DB
+                 value: root
+               - name: POSTGRES_USER
+                 value: tinku
+               - name: POSTGRES_PASSWORD
+                 value: tinku
+                 volumeMounts:
+               - mountPath: "/var/lib/postgresql/data"
+                 name: postgress_db
+      volumes: 
+        name: postgress_db
+        emptyDir:      
